@@ -4,35 +4,51 @@ Curso: Introducción a Machine Learning (604027) — Especialización en Analít
 Autor: Jheyson Morales.
 
 ## Objetivo
-Estimar, con regresión lineal, la demora en días entre el inicio de síntomas y la consulta en casos notificados a SIVIGILA del evento 155 (cáncer de la mama y cuello uterino), usando como predictores: departamento de residencia, edad, régimen de afiliación, EAPB, estrato y área.
+Estimar con regresión lineal la demora, en días, entre el inicio de síntomas y la consulta en casos del evento 155 notificados a SIVIGILA en 2025, e identificar qué variables sociodemográficas y territoriales se asocian con ella.
 
 ## Datos
-- Fuente: Instituto Nacional de Salud, Portal SIVIGILA, búsqueda de microdatos: https://portalsivigila.ins.gov.co/Paginas/Buscador.aspx
-- Evento: Cáncer de la mama y cuello uterino. Año: 2025. Archivo: `Datos_2025_155.xlsx` (18.717 registros, 69 columnas).
-- La base de datos NO se incluye en este repositorio. Para reproducir el análisis, descárguela desde el portal del INS (requiere diligenciar un formulario de registro) y guárdela con el nombre `Datos_2025_155.xlsx` en la misma carpeta del cuaderno.
+- Fuente: Instituto Nacional de Salud (INS), Portal SIVIGILA, búsqueda de microdatos.
+- Evento 155, año 2025: 18.717 registros, 69 columnas. Base nominal depurada, sin identificación personal.
+- La base no se incluye en el repositorio. Ver `data/LEEME_DATOS.md` para descargarla.
 
 ## Estructura
 ```
 .
-├── Regresion_demora_cancer_155.ipynb   # cuaderno con todo el flujo
-├── figuras/                            # gráficos generados por el cuaderno
+├── data/
+│   └── LEEME_DATOS.md                 # cómo obtener la base (no se publica)
+├── src/
+│   └── analisis_regresion.py          # flujo completo y reproducible
+├── figures/                           # 8 gráficos exportados por el script
+├── Regresion_demora_cancer_155.ipynb  # cuaderno de exploración inicial (Colab)
 ├── requirements.txt
 └── README.md
 ```
 
 ## Pasos de ejecución
 1. Python 3.10 o superior.
-2. Instalar dependencias: `pip install -r requirements.txt`
-3. Colocar `Datos_2025_155.xlsx` en la carpeta del proyecto (rutas relativas; no se usan rutas absolutas).
-4. Abrir y ejecutar `Regresion_demora_cancer_155.ipynb` de arriba hacia abajo (en Google Colab: subir el cuaderno y el archivo de datos, y usar "Ejecutar todo").
+2. `pip install -r requirements.txt`
+3. Descargar la base y guardarla como `data/Datos_2025_155.xlsx`.
+4. Desde la carpeta raíz del repositorio: `python src/analisis_regresion.py`
+   El script imprime los resultados y guarda los gráficos en `figures/`.
 
-## Reproducibilidad
-- Semilla de aleatoriedad fijada: `random_state=42` en la división entrenamiento/prueba (75 % / 25 %).
+## Flujo del análisis
+1. Carga y control de calidad (duplicados, vacíos, fechas inconsistentes).
+2. Variable objetivo: `demora = FEC_CON − INI_SIN` (días).
+3. Limpieza: exclusión de demoras > 365 días, estrato vacío y residencia en el exterior (17.326 casos analizados).
+4. EDA: estadísticos, correlaciones, asimetría y gráficos por régimen, área y departamento.
+5. Codificación de variables categóricas (referencias: Bogotá, régimen contributivo, cabecera).
+6. Multicolinealidad (VIF): el modelo inicial con EAPB presentó colinealidad perfecta con el régimen; el modelo final excluye la EAPB.
+7. División 75/25 con semilla fija (`random_state=42`), regresión lineal, métricas en entrenamiento y prueba, comparación con línea base.
+8. Supuestos: linealidad, homocedasticidad y normalidad de residuos (gráficos y prueba de Shapiro-Wilk).
 
-## Resultados principales (conjunto de prueba)
+## Resultados del modelo final (conjunto de prueba)
 | Métrica | Valor |
 |---|---|
-| MAE | 48,85 días |
-| MSE | 4.523,21 |
-| RMSE | 67,25 días |
-| R² | 0,062 |
+| MAE | 49,44 días |
+| MSE | 4.547,49 |
+| RMSE | 67,44 días |
+| R² | 0,057 |
+
+## Reproducibilidad
+- Semilla fija: `random_state=42`.
+- Rutas relativas (`data/`, `figures/`); no se usan rutas absolutas.
